@@ -1,12 +1,7 @@
-import time
-from sensors import camera
+
 from model import StateMachine
 
-SENSOR_DELAY = 1
 
-picam  = camera.initialize_camera()
-picam.start()
-time.sleep(SENSOR_DELAY)
 
 def initialize_cnn(path):
     
