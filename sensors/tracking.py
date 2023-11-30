@@ -2,7 +2,7 @@ from pyfirmata import Arduino, util
 import time
 import cv2
 import numpy as np
-import camera, angle
+import camera, stepper
 from libcamera import controls
 
 def detect_red(frame):
@@ -56,10 +56,10 @@ if __name__ == "__main__":
             break
         if x_medium > center+30:
             print("Image is to the right")
-            angle.rotate_stepper(1, 'CW', board)
+            stepper.rotate_stepper(1, 'CW', board)
         elif x_medium < center-30:
             print("Image is to the left")
-            angle.rotate_stepper(1, 'CCW', board)
+            stepper.rotate_stepper(1, 'CCW', board)
         cv2.line(frame, (center, 0), (center, 480), (0, 255, 0), 2)
         cv2.imshow("Frame", frame)
         key = cv2.waitKey(1)

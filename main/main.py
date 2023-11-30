@@ -1,14 +1,8 @@
 
 from model import StateMachine
 
+CNN_PATH = ""
 
-
-def initialize_cnn(path):
-    
-
-def process_frame(frame):
-    pass
-
+stateMachine = StateMachine.StateMachine(cnn_data_path=CNN_PATH)
 while True:
-    frame = picam.capture_array()
-    process_frame(frame)
+    stateMachine.surveillance_one_step()
