@@ -4,7 +4,9 @@ from sensors import stepper
 from sensors import camera
 from PIL import Image
 from pyfirmata import Arduino
+from Net import ONNX_NET
 import torch
+
 
 SENSOR_DELAY = 1
 BASE_SURVEILLANCE_AMOUNT = 60
@@ -13,7 +15,10 @@ BASE_MINIMUM_ANGLE_AMOUNT = -120
 CAMERA_SURVEILLANCE_AMOUNT = 40
 CAMERA_MINIMUM_ANGLE_AMOUNT = 0
 CAMERA_MAXIMUM_ANGLE_AMOUNT = 180
-INPUT_IMAGE_SIZE = (128,128)
+ONNX_INPUT_IMAGE_SIZE = (128,128)
+ONNX_DATA_PATH = "./bin/yolo_data.pickle"
+ONNX_MODEL_PATH = "./bin/yolov8_sap.onnx"
+MINIMUM_CLASS_SCORE = 0.25
 
 class StateMachine():
     def __init__(self, cnn_path):
@@ -21,7 +26,7 @@ class StateMachine():
         self.camera = sensors[0]
         self.board = sensors[1]
         self.state = {"motion_state" : "surveillance","camera_angle":90, "base_angle":90, "camera_rotation_direction" : "CCW", "base_rotation_direction" : "CCW"}
-        self.yolo_net = cv2.dnn.readNetFromONNX(cnn_path)
+        self.yolo_sap = ONNX_NET(ONNX_DATA_PATH,ONNX_MODEL_PATH)
     def initialize_sensors(self):
         picam  = camera.initialize_camera()
         picam.start()
@@ -51,10 +56,19 @@ class StateMachine():
         else:
             # We've reached one of the constraints; reset direction now
             self.state["camera_rotation_direction"] = "CCW" if self.state["camera_rotation_direction"] == "CW" else "CW"
+    def preprocess_frame(self,frame):
+        image = Image.fromarray(frame)
+        image = cv2.resize(image,ONNX_INPUT_IMAGE_SIZE)
+        return cv2.dnn.blobFromImage(image, 1/255.0, ONNX_INPUT_IMAGE_SIZE, swapRB=True)
     def process_frame(self,frame):
-        frame = Image.fromarray(frame)
-        frame = frame.resize(INPUT_IMAGE_SIZE)
-        self.onnx_net.input()
+        blob = self.preprocess_frame(frame)
+        net = self.yolo_sap.get_onnx_net()
+        predictions = net.forward()
+        return predictions[0]
+    def unwrap_detections(self,frame,cnn_output):
+        class_ids, confidences, bboxes = [],[],[]
+        
+    
         
 
 
