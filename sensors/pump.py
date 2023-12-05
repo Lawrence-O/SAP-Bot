@@ -1,7 +1,7 @@
 from pyfirmata import Arduino, util
 import time
 
-pumpPin = 4
+pumpPin = 3
 
 def shoot_liquid(board):
     board.digital[pumpPin].write(1)
