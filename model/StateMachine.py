@@ -22,7 +22,13 @@ class StateMachine():
         # sensors = self.initialize_sensors()
         # self.camera = sensors[0]
         # self.board = sensors[1]
-        self.state = {"motion_state" : "surveillance","camera_angle":90, "base_angle":90, "camera_rotation_direction" : "CCW", "base_rotation_direction" : "CCW"}
+        self.state = {"motion_state" : "surveillance",
+                      "camera_angle":90, 
+                      "base_angle":90, 
+                      "camera_rotation_direction" : "CCW",
+                    "base_rotation_direction" : "CCW",
+                    "camera_position_x":0,
+                    "camera_position_y":0}
         self.object_detection = ObjectDetector()
         self.object_tracker = ObjectTracker()
     # def initialize_sensors(self):
@@ -54,6 +60,7 @@ class StateMachine():
         else:
             # We've reached one of the constraints; reset direction now
             self.state["camera_rotation_direction"] = "CCW" if self.state["camera_rotation_direction"] == "CW" else "CW"
+    
 
 
 

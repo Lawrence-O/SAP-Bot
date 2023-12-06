@@ -20,7 +20,7 @@ class ONNX_NET():
         #     self.data = pickle.load(handle)
         # self.class_to_idx = self.data["class_to_idx"]
         # self.idx_to_class = self.data["idx_to_class"]
-        self.onnx_net = cv2.dnn.readNetFromONNX(self.onnx_path)
+        self.onnx_net = None
         self.onnx_net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
         self.onnx_net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA_FP16)
     def get_onnx_net(self):
