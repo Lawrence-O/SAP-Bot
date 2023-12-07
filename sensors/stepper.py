@@ -37,6 +37,21 @@ def rotate_camera_stepper(angle,direction,board):
         time.sleep(0.0015)
         steps += 1
 
-    
-    
+def track_base_stepper(x, cam_center_x, board):
+    angle_per_unit = 30/cam_center_x
+    angle = (x-cam_center_x)*angle_per_unit
+    if (angle < 0):
+        rotate_base_stepper(angle, 'CCW', board)
+    else:
+        rotate_base_stepper(angle, 'CW', board)
+    return angle
+
+def track_camera_stepper(y, cam_center_y, board):
+    angle_per_unit = 20/cam_center_y
+    angle = (y-cam_center_y)*angle_per_unit
+    if (angle < 0):
+        rotate_camera_stepper(angle, 'CCW', board)
+    else:
+        rotate_base_stepper(angle, 'CW', board)
+    return angle
         

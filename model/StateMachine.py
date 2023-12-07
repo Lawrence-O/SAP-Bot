@@ -3,6 +3,7 @@ import numpy as np
 from model.ObjectDetection import ObjectDetector
 from model.ObjectTracking import ObjectTracker
 from sensors import stepper
+from sensors import pump
 # from sensors import camera
 from pyfirmata import Arduino
 
@@ -19,23 +20,18 @@ CAMERA_MAXIMUM_ANGLE_AMOUNT = 180
 
 class StateMachine():
     def __init__(self):
-        # sensors = self.initialize_sensors()
-        # self.camera = sensors[0]
-        # self.board = sensors[1]
-        self.state = {"motion_state" : "surveillance",
-                      "camera_angle":90, 
-                      "base_angle":90, 
-                      "camera_rotation_direction" : "CCW",
-                    "base_rotation_direction" : "CCW",
-                    "camera_position_x":0,
-                    "camera_position_y":0}
+        sensors = self.initialize_sensors()
+        self.camera = sensors[0]
+        self.board = sensors[1]
+        self.frame = self.camera.capture_array()
+        self.state = {"motion_state" : "surveillance","camera_angle":90, "base_angle":90, "camera_rotation_direction" : "CCW", "base_rotation_direction" : "CCW","frameIndex":0}
         self.object_detection = ObjectDetector()
         self.object_tracker = ObjectTracker()
-    # def initialize_sensors(self):
-    #     picam  = camera.initialize_camera()
-    #     picam.start()
-    #     board = Arduino('/dev/ttyACM0')
-    #     return [picam, board]
+    def initialize_sensors(self):
+        picam  = self.camera.initialize_camera()
+        picam.start()
+        board = Arduino('/dev/ttyACM0')
+        return [picam, board]
     def surveillance_base(self):
         if self.state["base_rotation_direction"] == "CCW" and self.state["base_angle"] <= BASE_MAXIMUM_ANGLE_AMOUNT:
             #Rotate CCW when angle is less than 300
@@ -60,7 +56,9 @@ class StateMachine():
         else:
             # We've reached one of the constraints; reset direction now
             self.state["camera_rotation_direction"] = "CCW" if self.state["camera_rotation_direction"] == "CW" else "CW"
-    
+    def surveillance_one_step(self):
+        self.surveillance_base()
+        self.surveillance_camera
 
 
 
