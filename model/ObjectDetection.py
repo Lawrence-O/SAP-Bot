@@ -1,5 +1,5 @@
 import cv2
-import cv2.legacy as legacy
+# import cv2.legacy as legacys
 import numpy as np
 import concurrent.futures
 
@@ -27,9 +27,11 @@ class ObjectDetector():
     def __init__(self):
         self.yolo_sap = cv2.dnn.readNetFromONNX(SAP_ONNX_MODEL_PATH)
         self.yolo_org = cv2.dnn.readNetFromONNX(ORG_ONNX_MODEL_PATH)
-        self.tracker = legacy.TrackerMOSSE().create()
+        # self.tracker = legacy.TrackerMOSSE().create()
     def preprocess_frame(self,frame,resize_size):
-        return cv2.dnn.blobFromImage(frame, 1/255.0,resize_size,swapRB=True,crop=False)
+        print(frame.shape)
+        print(resize_size)
+        return cv2.dnn.blobFromImage(frame, 1/255.0,size=resize_size,swapRB=True,crop=False)
     def process_frame(self,blob,model):
         net = model
         net.setInput(blob)
