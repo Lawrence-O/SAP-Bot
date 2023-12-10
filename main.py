@@ -10,19 +10,73 @@ stateMachine = StateMachine.StateMachine()
 
 seenTargets = set()
 
+def getNewTargetCoordinates(frame):
+    targets, scores = stateMachine.object_detection.get_target_scores(frame)
+    targets_minHeap = []
+    camera_x,camera_y = frame.shape[1] // 2, frame.shape[0] // 2
+    for i in range(len(targets)):
+        if scores[i] >= 0:
+            heappush(targets_minHeap, (-1*scores[i], targets[i]))
+    score,bbox = heappop(targets_minHeap)
+    target_x,target_y = stateMachine.object_detection.get_bbox_centroid(bbox)
+    return target_x, target_y
+
+
 def checkForTargets(frame):
     targets, scores = stateMachine.object_detection.get_target_scores(frame)
     targets_minHeap = []
     camera_x,camera_y = frame.shape[1] // 2, frame.shape[0] // 2
-    offset_x, offset_y = 0, 0
+   
     for i in range(len(targets)):
         if scores[i] >= 0:
             heappush(targets_minHeap, (-1*scores[i], targets[i]))
     while targets_minHeap:
         score,bbox = heappop(targets_minHeap)
+        offset_x, offset_y = 0, 0
         target_x,target_y = stateMachine.object_detection.get_bbox_centroid(bbox)
-        angle_x = stepper.track_target_base(target_x-offset_x, camera_x, stateMachine.board)
-        angle_y = stepper.track_target_camera(target_y-offset_y, camera_y, stateMachine.board)
+        if (target_x > camera_x and target_y > camera_y):
+            stepper.rotate_base_stepper(1, 'CW', stateMachine.board)
+            stepper.rotate_camera_stepper(1, 'CW', stateMachine.board)
+            new_frame = stateMachine.camera.capture_array()
+            new_x, new_y = getNewTargetCoordinates(new_frame)
+            stepper.rotate_base_stepper((new_x-camera_x)/(target_x-new_x), 'CW', stateMachine.board)
+            stepper.rotate_camera_stepper((new_y-camera_y)/(target_y-new_y), 'CW', stateMachine.board)
+            time.sleep(2)
+            stepper.rotate_base_stepper((new_x-camera_x)/(target_x-new_x)+1, 'CCW', stateMachine.board)
+            stepper.rotate_camera_stepper((new_y-camera_y)/(target_y-new_y)+1, 'CCW', stateMachine.board)
+        elif (target_x > camera_x):
+            stepper.rotate_base_stepper(1, 'CW', stateMachine.board)
+            stepper.rotate_camera_stepper(1, 'CCW', stateMachine.board)
+            new_frame = stateMachine.camera.capture_array()
+            new_x, new_y = getNewTargetCoordinates(new_frame)
+            stepper.rotate_base_stepper((new_x-camera_x)/(target_x-new_x), 'CW', stateMachine.board)
+            stepper.rotate_camera_stepper((camera_y-new_y)/(new_y-target_y), 'CCW', stateMachine.board)
+            time.sleep(2)
+            stepper.rotate_base_stepper((new_x-camera_x)/(target_x-new_x)+1, 'CCW', stateMachine.board)
+            stepper.rotate_camera_stepper((camera_y-new_y)/(new_y-target_y)+1, 'CW', stateMachine.board)
+        elif (target_y > camera_y):
+            stepper.rotate_base_stepper(1, 'CCW', stateMachine.board)
+            stepper.rotate_camera_stepper(1, 'CW', stateMachine.board)
+            new_frame = stateMachine.camera.capture_array()
+            new_x, new_y = getNewTargetCoordinates(new_frame)
+            stepper.rotate_base_stepper((camera_x-new_x)/(new_x-target_x), 'CCW', stateMachine.board)
+            stepper.rotate_camera_stepper((new_y-camera_y)/(target_y-new_y), 'CW', stateMachine.board)
+            time.sleep(2)
+            stepper.rotate_base_stepper((camera_x-new_x)/(new_x-target_x)+1, 'CW', stateMachine.board)
+            stepper.rotate_camera_stepper((new_y-camera_y)/(target_y-new_y)+1, 'CCW', stateMachine.board)
+            
+        else:
+            stepper.rotate_base_stepper(1, 'CCW', stateMachine.board)
+            stepper.rotate_camera_stepper(1, 'CCW', stateMachine.board)
+            new_frame = stateMachine.camera.capture_array()
+            new_x, new_y = getNewTargetCoordinates(new_frame)
+            stepper.rotate_base_stepper((camera_x-new_x)/(new_x-target_x), 'CCW', stateMachine.board)
+            stepper.rotate_camera_stepper((camera_y-new_y)/(new_y-target_y), 'CCW', stateMachine.board)
+            time.sleep(2)
+            stepper.rotate_base_stepper((camera_x-new_x)/(new_x-target_x)+1, 'CW', stateMachine.board)
+            stepper.rotate_camera_stepper((camera_y-new_y)/(new_y-target_y)+1, 'CW', stateMachine.board)
+        # angle_x = stepper.track_target_base(target_x-offset_x, camera_x, stateMachine.board)
+        # angle_y = stepper.track_target_camera(target_y-offset_y, camera_y, stateMachine.board)
 
 def surveillance():
     for i in range(100):
@@ -30,8 +84,9 @@ def surveillance():
             break
         frame = stateMachine.camera.capture_array()
         frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
-        stateMachine.surveillance_camera()
         checkForTargets(frame)
+        stateMachine.surveillance_camera()
+        
     stateMachine.surveillance_base()
     time.sleep(1)
     
