@@ -4,6 +4,7 @@ from sensors import stepper, pump,force_sensor
 from pyfirmata import Arduino, util
 import time
 import numpy as np
+import cv2
 
 stateMachine = StateMachine.StateMachine()
 
@@ -11,39 +12,35 @@ seenTargets = set()
 
 def checkForTargets(frame):
     targets, scores = stateMachine.object_detection.get_target_scores(frame)
-    targets_minHeap = heapify([])
+    print(targets,scores)
+    targets_minHeap = []
     offset_x, offset_y = 0, 0
     for i in range(len(targets)):
         if scores[i] >= 0:
             heappush(targets_minHeap, (-1*scores[i], targets[i]))
-    print("targets_minHeap", targets_minHeap)
-    # for elem in targets_minHeap:
-    #     coordinates = stateMachine.object_detection.get_bbox_centroid(elem[1])
-    #     if (stateMachine.state["frameIndex"], coordinates[0], coordinates[1]) in seenTargets:
-    #         continue
-    #     rows, cols, _ = frame.shape
-    #     cx, cy = int(cols/2), int(rows/2)
-    #     angle_x = stepper.track_base_stepper(coordinates[0]-offset_x, cx, stateMachine.board)
-    #     angle_y = stepper.track_camera_stepper(coordinates[1]-offset_y, cy, stateMachine.board)
-    #     stateMachine.state["base_angle"] += angle_x
-    #     stateMachine.state["camera_angle"] += angle_y
-    #     offset_x, offset_y = coordinates[0]-cx, coordinates[1]-cy
-    #     # pump.shoot_liquid(stateMachine.board)
-    #     seenTargets.add((stateMachine.state["frameIndex"],coordinates[0], coordinates[1]))
+    for elem in targets_minHeap:
+        coordinates = stateMachine.object_detection.get_bbox_centroid(elem[1])
+        if (stateMachine.state["frameIndex"], coordinates[0], coordinates[1]) in seenTargets:
+            continue
+        rows, cols, _ = frame.shape
+        cx, cy = int(cols/2), int(rows/2)
+        angle_x = stepper.track_base_stepper(coordinates[0]-offset_x, cx, stateMachine.board)
+        angle_y = stepper.track_camera_stepper(coordinates[1]-offset_y, cy, stateMachine.board)
+        stateMachine.state["base_angle"] += angle_x
+        stateMachine.state["camera_angle"] += angle_y
+        offset_x, offset_y = coordinates[0]-cx, coordinates[1]-cy
+        # pump.shoot_liquid(stateMachine.board)
+        seenTargets.add((stateMachine.state["frameIndex"],coordinates[0], coordinates[1]))
 
 
 def surveillance():
     for i in range(100):
         if stateMachine.state["camera_angle"] == -40  and stateMachine.state["camera_rotation_direction"] == "CW" and i != 0:
             break
-        stateMachine.surveillance_camera()
         frame = stateMachine.camera.capture_array()
-        if frame.shape[2] == 4:
-            frame = frame[:,:,:3]
-            frame = np.transpose(frame, (2, 0, 1))
-        print(frame.shape)
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
+        stateMachine.surveillance_camera()
         checkForTargets(frame)
-        exit()
     stateMachine.surveillance_base()
     time.sleep(1)
     

@@ -5,8 +5,8 @@ import time
 
 def initialize_camera():
     picam2 = Picamera2()
-    picam2.start_preview(Preview.QTGL)
-    main_config = {"size":(1280,720)}
+    # picam2.start_preview(Preview.QTGL)
+    main_config = {"size":(1024,1024),"format": "XRGB8888"}
     preview_config = picam2.create_preview_configuration(main=main_config,transform=Transform(hflip=1, vflip=1),)
     picam2.configure(preview_config)
     # picam2.set_controls({"AfMode": controls.AfModeEnum.Manual, "LensPosition": 30.0})

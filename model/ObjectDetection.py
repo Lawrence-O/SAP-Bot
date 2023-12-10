@@ -29,8 +29,6 @@ class ObjectDetector():
         self.yolo_org = cv2.dnn.readNetFromONNX(ORG_ONNX_MODEL_PATH)
         # self.tracker = legacy.TrackerMOSSE().create()
     def preprocess_frame(self,frame,resize_size):
-        print(frame.shape)
-        print(resize_size)
         return cv2.dnn.blobFromImage(frame, 1/255.0,size=resize_size,swapRB=True,crop=False)
     def process_frame(self,blob,model):
         net = model
@@ -161,6 +159,7 @@ class ObjectDetector():
         return objects_bboxes,scores
     def get_target_scores(self,frame):
         detections = self.get_combined_detections(frame)
+        print("detections",detections)
         object_bboxes = []
         penalty_bboxes = []
         for label, bboxes_list in detections.items():
@@ -170,7 +169,11 @@ class ObjectDetector():
                 elif label in PENALTY_CLASS_LABELS:
                     penalty_bboxes.append(bbox)
         camera_y,camera_x = frame.shape[0] // 2, frame.shape[1] // 2
-        targets,scores = self.find_object_scores(object_bboxes,penalty_bboxes,(camera_x,camera_y),frame.shape)
-        return targets,scores
+        if object_bboxes: 
+            targets,scores = self.find_object_scores(object_bboxes,penalty_bboxes,(camera_x,camera_y),frame.shape)
+            return targets,scores
+        else:
+            return ([],[])
+        
     
     
