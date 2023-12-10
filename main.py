@@ -21,8 +21,8 @@ def checkForTargets(frame):
     while targets_minHeap:
         score,bbox = heappop(targets_minHeap)
         target_x,target_y = stateMachine.object_detection.get_bbox_centroid(bbox)
-        angle_x = stepper.track_base_stepper(target_x-offset_x, camera_x, stateMachine.board)
-        angle_y = stepper.track_camera_stepper(target_y-offset_y, camera_y, stateMachine.board)
+        angle_x = stepper.track_target_base(target_x-offset_x, camera_x, stateMachine.board)
+        angle_y = stepper.track_target_camera(target_y-offset_y, camera_y, stateMachine.board)
 
 def surveillance():
     for i in range(100):
