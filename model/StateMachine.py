@@ -24,7 +24,7 @@ class StateMachine():
         self.camera = sensors[0]
         self.board = sensors[1]
         self.frame = self.camera.capture_array()
-        self.state = {"motion_state" : "surveillance","camera_angle":0, "base_angle":90, "camera_rotation_direction" : "CCW", "base_rotation_direction" : "CCW","frameIndex":0}
+        self.state = {"motion_state" : "surveillance","camera_angle":0, "base_angle":90, "camera_rotation_direction" : "CCW", "base_rotation_direction" : "CCW"}
         self.object_detection = ObjectDetector()
         # self.object_tracker = ObjectTracker()
     def initialize_sensors(self):

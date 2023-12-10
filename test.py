@@ -1,8 +1,9 @@
 from model.ObjectDetection import ObjectDetector
 import cv2
 import numpy as np
+import heapq
 
-frame = cv2.imread("./img_1.jpeg")
-det = ObjectDetector()
-x = det.get_combined_detections(frame)
-print(x)
+minHeap = [(-0.02,[-1,0,952,974])]
+heapq.heapify(minHeap)
+
+print(minHeap)
