@@ -37,58 +37,83 @@ class ObjectDetector():
         net.setInput(blob)
         predictions = net.forward()
         return  predictions.transpose((0, 2, 1))
-    def unwrap_detections(self, frame, cnn_output, resize_size, class_id_offset=0, ignore_label=None):
+    # def unwrap_detections(self, frame, cnn_output, resize_size, class_id_offset=0, ignore_label=None):
+    #     labels = dict()
+    #     image_height, image_width, _ = frame.shape
+    #     x_factor = image_width / resize_size[0]
+    #     y_factor = image_height / resize_size[1]
+       
+    #     positions = cnn_output[0][:, :4]
+    #     confidences = cnn_output[0][:, 4]
+    #     classes_scores = cnn_output[0][:, 4:]
+
+    #     # Find the index of the class with maximum score
+    #     max_class_indices = np.argmax(classes_scores, axis=1)
+    #     max_class_scores = np.max(classes_scores, axis=1)
+        
+    #     # Apply filtering conditions
+    #     valid_indices = max_class_scores > MINIMUM_CLASS_SCORE
+    #     valid_labels = max_class_indices + class_id_offset
+
+    #     # Check for ignore_label
+    #     if ignore_label is not None:
+    #         ignore_mask = np.isin(valid_labels, ignore_label)
+    #         valid_indices &= ~ignore_mask  # Exclude ignored labels
+
+    #     # Extract valid data using boolean indexing
+    #     valid_positions = positions[valid_indices]
+    #     valid_confidences = confidences[valid_indices]
+    #     valid_class_indicies = max_class_indices[valid_indices] + class_id_offset
+
+    #     if not valid_positions.all():
+    #         return labels  # No valid positions after filtering
+
+    #     # Calculate bounding boxes
+    #     left = ((valid_positions[:, 0] - 0.5 * valid_positions[:, 2]) * x_factor).astype(int)
+    #     top = ((valid_positions[:, 1] - 0.5 * valid_positions[:, 3]) * y_factor).astype(int)
+    #     width = (valid_positions[:, 2] * x_factor).astype(int)
+    #     height = (valid_positions[:, 3] * y_factor).astype(int)
+
+    #     boxes = np.column_stack([left, top, width, height])
+
+    #     # Extract class_id using class_id_offset
+    #     class_ids = valid_class_indicies + class_id_offset
+
+    #     # Corrected class_id extraction
+    #     labels = {class_id: [] for class_id in class_ids}
+
+    #     # Populate the labels dictionary
+    #     for i, class_id in enumerate(class_ids):
+    #         box = boxes[i]
+    #         conf = valid_confidences[i]
+    #         labels[class_id].append((box, conf))
+    #     # print("PRE POPULATED LABELS DICT",labels)
+    #     return labels
+    def unwrap_detections(self,frame,cnn_output,resize_size,class_id_offset=0,ignore_label=None):
         labels = dict()
         image_height, image_width, _ = frame.shape
         x_factor = image_width / resize_size[0]
         y_factor = image_height / resize_size[1]
-       
-        positions = cnn_output[0][:, :4]
-        confidences = cnn_output[0][:, 4]
-        classes_scores = cnn_output[0][:, 4:]
-
-        # Find the index of the class with maximum score
-        max_class_indices = np.argmax(classes_scores, axis=1)
-        max_class_scores = np.max(classes_scores, axis=1)
-        
-        # Apply filtering conditions
-        valid_indices = max_class_scores > MINIMUM_CLASS_SCORE
-        valid_labels = max_class_indices + class_id_offset
-
-        # Check for ignore_label
-        if ignore_label is not None:
-            ignore_mask = np.isin(valid_labels, ignore_label)
-            valid_indices &= ~ignore_mask  # Exclude ignored labels
-
-        # Extract valid data using boolean indexing
-        valid_positions = positions[valid_indices]
-        valid_confidences = confidences[valid_indices]
-        valid_class_indicies = max_class_indices[valid_indices] + class_id_offset
-
-        if not valid_positions.all():
-            return labels  # No valid positions after filtering
-
-        # Calculate bounding boxes
-        left = ((valid_positions[:, 0] - 0.5 * valid_positions[:, 2]) * x_factor).astype(int)
-        top = ((valid_positions[:, 1] - 0.5 * valid_positions[:, 3]) * y_factor).astype(int)
-        width = (valid_positions[:, 2] * x_factor).astype(int)
-        height = (valid_positions[:, 3] * y_factor).astype(int)
-
-        boxes = np.column_stack([left, top, width, height])
-
-        # Extract class_id using class_id_offset
-        class_ids = valid_class_indicies + class_id_offset
-
-        # Corrected class_id extraction
-        labels = {class_id: [] for class_id in class_ids}
-
-        # Populate the labels dictionary
-        for i, class_id in enumerate(class_ids):
-            box = boxes[i]
-            conf = valid_confidences[i]
-            labels[class_id].append((box, conf))
-        # print("PRE POPULATED LABELS DICT",labels)
-        return labels
+        rows = cnn_output[0].shape[0]
+        for i in range(rows):
+            row = cnn_output[0][i]
+            conf = row[4]
+            classes_score = row[4:]
+            _,_,_, max_idx = cv2.minMaxLoc(classes_score)
+            class_id = max_idx[1]
+            if (classes_score[class_id] > MINIMUM_CLASS_SCORE):
+                # confs.append(conf)
+                label = int(class_id) + class_id_offset          
+                #extract boxes
+                x, y, w, h = row[0].item(), row[1].item(), row[2].item(), row[3].item() 
+                left = int((x - 0.5 * w) * x_factor)
+                top = int((y - 0.5 * h) * y_factor)
+                width = int(w * x_factor)
+                height = int(h * y_factor)
+                box = np.array([left, top, width, height])
+                # print(conf if label == 81 else "none",classes_score[class_id] if label == 81 else "none",)
+                labels[label] = labels.get(label, []) + [(box,conf)]
+        return  labels
     def apply_nms(self, detections):
         #Concatinate Matrixes to only 1 (each row is an object)
         final_detections = dict()

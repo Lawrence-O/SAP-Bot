@@ -1,7 +1,8 @@
-from ultralytics import YOLO
+from model.ObjectDetection import ObjectDetector
+import cv2
+import numpy as np
 
-
-print("starting")
-model = YOLO("yolov8s.pt")
-model.export(format="ONNX",simplify=True,opset=12,dynamic=False)
-print("done")
+frame = cv2.imread("./img_1.jpeg")
+det = ObjectDetector()
+x = det.get_combined_detections(frame)
+print(x)
