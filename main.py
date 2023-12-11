@@ -10,13 +10,13 @@ stateMachine = StateMachine.StateMachine()
 # movement_stack = []
 seenTargets = set()
 
+def 
+
 def retrack_target(old_frame,new_frame,old_bbox):
     new_bbox = stateMachine.object_tracker.get_new_object_position(old_frame,new_frame,old_bbox)
     if new_bbox is not None:
-        print("Using Tracker")
         return new_bbox
     else:
-        print("Using Other")
         frame = stateMachine.camera.capture_array()
         frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
         targets,scores = stateMachine.object_detection.get_target_scores(frame)
@@ -48,23 +48,20 @@ def ShootTargets(frame,targets,scores):
         #Go Back to the previous coordinate
         print(f"Initial Detection Angles: X {angle_x} ; Y {angle_y}")
         print(f"New Angles: X {new_angle_x} ; Y : {new_angle_y}")
-        break
     exit()
 
 def surveillance():
     for i in range(100):
-        if stateMachine.state["camera_angle"] == -40  and stateMachine.state["camera_rotation_direction"] == "CW" and i != 0:
-            break
         frame = stateMachine.camera.capture_array()
         frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
         targets, scores = stateMachine.object_detection.get_target_scores(frame)
-        if targets and scores.all():
-            ShootTargets(frame, targets, scores)
+        if targets:
+            return frame, targets, scores
+        if stateMachine.state["camera_angle"] == -40  and stateMachine.state["camera_rotation_direction"] == "CW" and i != 0:
             break
-        else:
-            stateMachine.surveillance_camera()
+        stateMachine.surveillance_camera()
     stateMachine.surveillance_base()
-    time.sleep(1)
+    time.sleep(0.01)
     
 
 while True:
@@ -76,7 +73,8 @@ while True:
     # stepper.rotate_base_stepper(60, "CW",board)
 
     # time.sleep(5)
-    surveillance()
+    frame, targets, scores = surveillance()
+    ShootTargets(frame,targets,scores)
     # stateMachine.frame = stateMachine.camera.capture_array()
     # targets, scores = stateMachine.object_detection.get_target_scores(stateMachine.frame)
     # offset_x, offset_y = 0, 0
