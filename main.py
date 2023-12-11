@@ -13,8 +13,10 @@ seenTargets = set()
 def retrack_target(old_frame,new_frame,old_bbox):
     new_bbox = stateMachine.object_tracker.get_new_object_position(old_frame,new_frame,old_bbox)
     if new_bbox is not None:
+        print("Using Tracker")
         return new_bbox
     else:
+        print("Using Detections")
         frame = stateMachine.camera.capture_array()
         frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
         targets,scores = stateMachine.object_detection.get_target_scores(frame)
@@ -30,6 +32,7 @@ def ShootTargets(frame,targets,scores):
     for i in range(len(targets)):
         if scores[i] >= 0:
             heappush(targets_minHeap, (-1*scores[i], targets[i]))
+    print("Minheap: ",targets_minHeap)
     while targets_minHeap:
         _,bbox = heappop(targets_minHeap)
         target_x,target_y = stateMachine.object_detection.get_bbox_centroid(bbox)
@@ -42,7 +45,7 @@ def ShootTargets(frame,targets,scores):
         new_frame = cv2.cvtColor(new_frame, cv2.COLOR_RGBA2RGB)
         new_bbox = retrack_target(frame,new_frame,bbox)
         total_x, total_y = 0, 0
-        if new_bbox:
+        if (new_bbox is not None):
             # Adjust Movement
             new_target_x,new_target_y = stateMachine.object_detection.get_bbox_centroid(new_bbox)
             new_angle_x, new_dir_x = stepper.track_target_base(new_target_x-offset_x, camera_x, stateMachine.board)
@@ -58,7 +61,12 @@ def ShootTargets(frame,targets,scores):
             else:
                 total_y -= new_angle_y
         #Go Back to the previous coordinate
-        
+        for _ in range(100):
+            force_sensor.check_liquid_level(stateMachine.board)
+        # stepper.rotate_base_stepper(8, 'CW', stateMachine.board)
+        # stepper.rotate_camera_stepper(5, 'CCW', stateMachine.board)
+        pump.shoot_liquid(stateMachine.board)
+        time.sleep(0.5)
         if dir_x == "CCW":
             total_x += angle_x
         else:
@@ -77,7 +85,7 @@ def ShootTargets(frame,targets,scores):
             stepper.rotate_camera_stepper(total_y, 'CCW', stateMachine.board)
         else:
             stepper.rotate_camera_stepper(abs(total_y), 'CW', stateMachine.board)
-    exit()
+    # exit()
 
 def surveillance():
     for i in range(100):
@@ -91,9 +99,11 @@ def surveillance():
         stateMachine.surveillance_camera()
     stateMachine.surveillance_base()
     time.sleep(0.01)
+    return (None,None,None)
     
-
 while True:
+    for _ in range(100):
+        force_sensor.check_liquid_level(stateMachine.board)
 #     print("Surveilling")
     # force_sensor.check_liquid_level(board)
     # stepper.rotate_camera_stepper(60, "CCW",stateMachine.board)
@@ -103,8 +113,15 @@ while True:
 
     # time.sleep(5)
     frame, targets, scores = surveillance()
+    if frame is None or targets is None or scores is None:
+        print("isNONE")
+        continue
+    else:
+        print("TARGETs and Scores")
+        print(targets, scores)
+   
     ShootTargets(frame,targets,scores)
-    time.sleep(1)
+    # time.sleep(1)
     # stateMachine.frame = stateMachine.camera.capture_array()
     # targets, scores = stateMachine.object_detection.get_target_scores(stateMachine.frame)
     # offset_x, offset_y = 0, 0

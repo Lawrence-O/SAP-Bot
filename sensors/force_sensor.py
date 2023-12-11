@@ -16,7 +16,6 @@ def check_liquid_level(board):
         sensorRead = 0.0
     
     sensorRead *= 1023.0
-    print(sensorRead)
     board.digital[ledPin1].write(0)
     board.digital[ledPin2].write(0)
     board.digital[ledPin3].write(0)
