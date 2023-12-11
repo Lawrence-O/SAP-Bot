@@ -13,8 +13,10 @@ seenTargets = set()
 def retrack_target(old_frame,new_frame,old_bbox):
     new_bbox = stateMachine.object_tracker.get_new_object_position(old_frame,new_frame,old_bbox)
     if new_bbox is not None:
+        print("Using Tracker")
         return new_bbox
     else:
+        print("Using Other")
         frame = stateMachine.camera.capture_array()
         frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
         targets,scores = stateMachine.object_detection.get_target_scores(frame)
@@ -46,6 +48,7 @@ def ShootTargets(frame,targets,scores):
         #Go Back to the previous coordinate
         print(f"Initial Detection Angles: X {angle_x} ; Y {angle_y}")
         print(f"New Angles: X {new_angle_x} ; Y : {new_angle_y}")
+        break
     exit()
 
 def surveillance():
@@ -55,8 +58,9 @@ def surveillance():
         frame = stateMachine.camera.capture_array()
         frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
         targets, scores = stateMachine.object_detection.get_target_scores(frame)
-        if targets and scores:
+        if targets and scores.all():
             ShootTargets(frame, targets, scores)
+            break
         else:
             stateMachine.surveillance_camera()
     stateMachine.surveillance_base()
