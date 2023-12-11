@@ -10,8 +10,6 @@ stateMachine = StateMachine.StateMachine()
 # movement_stack = []
 seenTargets = set()
 
-def 
-
 def retrack_target(old_frame,new_frame,old_bbox):
     new_bbox = stateMachine.object_tracker.get_new_object_position(old_frame,new_frame,old_bbox)
     if new_bbox is not None:
@@ -20,9 +18,10 @@ def retrack_target(old_frame,new_frame,old_bbox):
         frame = stateMachine.camera.capture_array()
         frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
         targets,scores = stateMachine.object_detection.get_target_scores(frame)
-        max_score_indx = np.argmax(scores)
-        return targets[max_score_indx]
-        
+        if targets:
+            max_score_indx = np.argmax(scores)
+            return targets[max_score_indx]
+    return None  
 
 def ShootTargets(frame,targets,scores):
     targets_minHeap = []
@@ -37,17 +36,18 @@ def ShootTargets(frame,targets,scores):
         #Initial Move
         angle_x, dir_x = stepper.track_target_base(target_x-offset_x, camera_x, stateMachine.board)
         angle_y, dir_y = stepper.track_target_camera(target_y-offset_y, camera_y, stateMachine.board)
+        print(f"Initial Detection Angles: X {angle_x} ; Y {angle_y}")
         #Find New Object Position
         new_frame = stateMachine.camera.capture_array()
-        new_frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
+        new_frame = cv2.cvtColor(new_frame, cv2.COLOR_RGBA2RGB)
         new_bbox = retrack_target(frame,new_frame,bbox)
-        # Adjust Movement
-        new_target_x,new_target_y = stateMachine.object_detection.get_bbox_centroid(new_bbox)
-        new_angle_x, new_dir_x = stepper.track_target_base(new_target_x-offset_x, camera_x, stateMachine.board)
-        new_angle_y, new_dir_y = stepper.track_target_camera(new_target_y-offset_y, camera_y, stateMachine.board)
+        if new_bbox is not None:
+            # Adjust Movement
+            new_target_x,new_target_y = stateMachine.object_detection.get_bbox_centroid(new_bbox)
+            new_angle_x, new_dir_x = stepper.track_target_base(new_target_x-offset_x, camera_x, stateMachine.board)
+            new_angle_y, new_dir_y = stepper.track_target_camera(new_target_y-offset_y, camera_y, stateMachine.board)
+            print(f"New Angles: X {new_angle_x} ; Y : {new_angle_y}")
         #Go Back to the previous coordinate
-        print(f"Initial Detection Angles: X {angle_x} ; Y {angle_y}")
-        print(f"New Angles: X {new_angle_x} ; Y : {new_angle_y}")
     exit()
 
 def surveillance():
