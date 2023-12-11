@@ -41,19 +41,19 @@ def rotate_camera_stepper(angle,direction,board):
 def track_target_base(x, camera_center_x, board):
     angle_per_unit = 30/camera_center_x
     angle = (x-camera_center_x)*angle_per_unit
-    if angle < 0:
+    if angle <= 0:
         rotate_base_stepper(abs(angle), 'CCW', board)
         return (abs(angle), 'CW')
-    elif angle > 0:
+    else:
         rotate_base_stepper(abs(angle), 'CW', board)
         return (abs(angle), 'CCW')
 
 def track_target_camera(y, camera_center_y, board):
     angle_per_unit = 20/camera_center_y
     angle = (y-camera_center_y)*angle_per_unit
-    if angle < 0:
+    if angle <= 0:
         rotate_base_stepper(abs(angle), 'CCW', board)
         return (abs(angle), 'CW')
-    elif angle > 0:
+    else:
         rotate_base_stepper(abs(angle), 'CW', board)
         return (abs(angle), 'CCW')
