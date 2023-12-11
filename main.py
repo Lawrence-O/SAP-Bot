@@ -75,6 +75,7 @@ while True:
     # time.sleep(5)
     frame, targets, scores = surveillance()
     ShootTargets(frame,targets,scores)
+    time.sleep(1)
     # stateMachine.frame = stateMachine.camera.capture_array()
     # targets, scores = stateMachine.object_detection.get_target_scores(stateMachine.frame)
     # offset_x, offset_y = 0, 0

@@ -15,7 +15,7 @@ YOLO_INPUT_IMAGE_SIZE = (640,640)
 SAP_ONNX_MODEL_PATH = "./bin/yolov8_sap.onnx"
 # ORG_ONNX_DATA_PATH = "./bin/org_yolo_data.pickle"
 ORG_ONNX_MODEL_PATH = "./bin/yolov8s.onnx"
-MINIMUM_DETECTION_SCORE = 0.3
+MINIMUM_DETECTION_SCORE = 0.5
 MINIMUM_CLASS_SCORE = 0.3
 # SAP_DETECTION_WEIGHT = 0.6
 CLASS_ID_SAP_OFFSET = 80
@@ -164,7 +164,7 @@ class ObjectDetector():
         penalty_bboxes = []
         for label, bboxes_list in detections.items():
             for bbox in bboxes_list:
-                if label >= CLASS_ID_SAP_OFFSET:
+                if CLASS_ID_SAP_OFFSET <= label <= 84:
                     object_bboxes.append(bbox)
                 elif label in PENALTY_CLASS_LABELS:
                     penalty_bboxes.append(bbox)
