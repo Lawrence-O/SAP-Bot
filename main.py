@@ -48,6 +48,35 @@ def ShootTargets(frame,targets,scores):
             new_angle_y, new_dir_y = stepper.track_target_camera(new_target_y-offset_y, camera_y, stateMachine.board)
             print(f"New Angles: X {new_angle_x} ; Y : {new_angle_y}")
         #Go Back to the previous coordinate
+        total_x, total_y = 0, 0
+        if dir_x == "CCW":
+            total_x += angle_x
+        else:
+            total_x -= angle_x
+
+        if dir_y == "CCW":
+            total_y += angle_y
+        else:
+            total_y -= angle_y
+
+        if new_dir_x == "CCW":
+            total_x += new_angle_x
+        else:
+            total_x -= new_angle_x
+
+        if new_dir_y == "CCW":
+            total_y += new_angle_y
+        else:
+            total_y -= new_angle_y
+        
+        if total_x >= 0:
+            stepper.rotate_base_stepper(total_x, 'CCW', stateMachine.board)
+        else:
+            stepper.rotate_base_stepper(abs(total_x), 'CW', stateMachine.board)
+        if total_y >= 0:
+            stepper.rotate_camera_stepper(total_x, 'CCW', stateMachine.board)
+        else:
+            stepper.rotate_camera_stepper(abs(total_x), 'CW', stateMachine.board)
     exit()
 
 def surveillance():
