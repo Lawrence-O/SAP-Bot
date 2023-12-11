@@ -21,7 +21,6 @@ def retrack_target(old_frame,new_frame,old_bbox):
         max_score_indx = np.argmax(scores)
         return targets[max_score_indx]
         
-    
 
 def ShootTargets(frame,targets,scores):
     targets_minHeap = []
@@ -33,8 +32,19 @@ def ShootTargets(frame,targets,scores):
     while targets_minHeap:
         _,bbox = heappop(targets_minHeap)
         target_x,target_y = stateMachine.object_detection.get_bbox_centroid(bbox)
+        #Initial Move
         angle_x, dir_x = stepper.track_target_base(target_x-offset_x, camera_x, stateMachine.board)
         angle_y, dir_y = stepper.track_target_camera(target_y-offset_y, camera_y, stateMachine.board)
+        #Find New Object Position
+        new_frame = stateMachine.camera.capture_array()
+        new_frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
+        new_bbox = retrack_target(frame,new_frame,bbox)
+        # Adjust Movement
+        new_target_x,new_target_y = stateMachine.object_detection.get_bbox_centroid(new_bbox)
+        new_angle_x, new_dir_x = stepper.track_target_base(target_x-offset_x, camera_x, stateMachine.board)
+        new_angle_y, new_dir_y = stepper.track_target_camera(target_y-offset_y, camera_y, stateMachine.board)
+        #Go Back to the previous coordinate
+
 
     exit()
         # stepper.rotate_base_stepper()
