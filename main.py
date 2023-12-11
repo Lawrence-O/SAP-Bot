@@ -41,14 +41,24 @@ def ShootTargets(frame,targets,scores):
         new_frame = stateMachine.camera.capture_array()
         new_frame = cv2.cvtColor(new_frame, cv2.COLOR_RGBA2RGB)
         new_bbox = retrack_target(frame,new_frame,bbox)
-        if new_bbox is not None:
+        total_x, total_y = 0, 0
+        if new_bbox:
             # Adjust Movement
             new_target_x,new_target_y = stateMachine.object_detection.get_bbox_centroid(new_bbox)
             new_angle_x, new_dir_x = stepper.track_target_base(new_target_x-offset_x, camera_x, stateMachine.board)
             new_angle_y, new_dir_y = stepper.track_target_camera(new_target_y-offset_y, camera_y, stateMachine.board)
             print(f"New Angles: X {new_angle_x} ; Y : {new_angle_y}")
+            if new_dir_x == "CCW":
+                total_x += new_angle_x
+            else:
+                total_x -= new_angle_x
+
+            if new_dir_y == "CCW":
+                total_y += new_angle_y
+            else:
+                total_y -= new_angle_y
         #Go Back to the previous coordinate
-        total_x, total_y = 0, 0
+        
         if dir_x == "CCW":
             total_x += angle_x
         else:
@@ -58,25 +68,15 @@ def ShootTargets(frame,targets,scores):
             total_y += angle_y
         else:
             total_y -= angle_y
-
-        if new_dir_x == "CCW":
-            total_x += new_angle_x
-        else:
-            total_x -= new_angle_x
-
-        if new_dir_y == "CCW":
-            total_y += new_angle_y
-        else:
-            total_y -= new_angle_y
         
         if total_x >= 0:
             stepper.rotate_base_stepper(total_x, 'CCW', stateMachine.board)
         else:
             stepper.rotate_base_stepper(abs(total_x), 'CW', stateMachine.board)
         if total_y >= 0:
-            stepper.rotate_camera_stepper(total_x, 'CCW', stateMachine.board)
+            stepper.rotate_camera_stepper(total_y, 'CCW', stateMachine.board)
         else:
-            stepper.rotate_camera_stepper(abs(total_x), 'CW', stateMachine.board)
+            stepper.rotate_camera_stepper(abs(total_y), 'CW', stateMachine.board)
     exit()
 
 def surveillance():
