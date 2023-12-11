@@ -10,8 +10,7 @@ stateMachine = StateMachine.StateMachine()
 
 seenTargets = set()
 
-def checkForTargets(frame):
-    targets, scores = stateMachine.object_detection.get_target_scores(frame)
+def ShootTargets(frame,targets,scores):
     targets_minHeap = []
     camera_x,camera_y = frame.shape[1] // 2, frame.shape[0] // 2
     offset_x, offset_y = 0, 0
@@ -19,10 +18,12 @@ def checkForTargets(frame):
         if scores[i] >= 0:
             heappush(targets_minHeap, (-1*scores[i], targets[i]))
     while targets_minHeap:
-        score,bbox = heappop(targets_minHeap)
+        _,bbox = heappop(targets_minHeap)
         target_x,target_y = stateMachine.object_detection.get_bbox_centroid(bbox)
-        angle_x = stepper.track_target_base(target_x-offset_x, camera_x, stateMachine.board)
-        angle_y = stepper.track_target_camera(target_y-offset_y, camera_y, stateMachine.board)
+        angle_x, dir_x = stepper.track_target_base(target_x-offset_x, camera_x, stateMachine.board)
+        angle_y, dir_y = stepper.track_target_camera(target_y-offset_y, camera_y, stateMachine.board)
+    exit()
+        # stepper.rotate_base_stepper()
 
 def surveillance():
     for i in range(100):
@@ -30,8 +31,10 @@ def surveillance():
             break
         frame = stateMachine.camera.capture_array()
         frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
+        targets, scores = stateMachine.object_detection.get_target_scores(frame)
+        if targets and scores:
+            ShootTargets(frame, targets, scores)
         stateMachine.surveillance_camera()
-        checkForTargets(frame)
     stateMachine.surveillance_base()
     time.sleep(1)
     
