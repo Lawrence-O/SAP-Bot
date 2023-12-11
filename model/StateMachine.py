@@ -26,7 +26,7 @@ class StateMachine():
         self.frame = self.camera.capture_array()
         self.state = {"motion_state" : "surveillance","camera_angle":0, "base_angle":90, "camera_rotation_direction" : "CCW", "base_rotation_direction" : "CCW"}
         self.object_detection = ObjectDetector()
-        # self.object_tracker = ObjectTracker()
+        self.object_tracker = ObjectTracker()
     def initialize_sensors(self):
         picam  = camera.initialize_camera()
         picam.start()

@@ -7,8 +7,21 @@ import numpy as np
 import cv2
 
 stateMachine = StateMachine.StateMachine()
-
+# movement_stack = []
 seenTargets = set()
+
+def retrack_target(old_frame,new_frame,old_bbox):
+    new_bbox = stateMachine.object_tracker.get_new_object_position(old_frame,new_frame,old_bbox)
+    if new_bbox is not None:
+        return new_bbox
+    else:
+        frame = stateMachine.camera.capture_array()
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGBA2RGB)
+        targets,scores = stateMachine.object_detection.get_target_scores(frame)
+        max_score_indx = np.argmax(scores)
+        return targets[max_score_indx]
+        
+    
 
 def ShootTargets(frame,targets,scores):
     targets_minHeap = []
@@ -22,6 +35,7 @@ def ShootTargets(frame,targets,scores):
         target_x,target_y = stateMachine.object_detection.get_bbox_centroid(bbox)
         angle_x, dir_x = stepper.track_target_base(target_x-offset_x, camera_x, stateMachine.board)
         angle_y, dir_y = stepper.track_target_camera(target_y-offset_y, camera_y, stateMachine.board)
+
     exit()
         # stepper.rotate_base_stepper()
 
@@ -34,7 +48,8 @@ def surveillance():
         targets, scores = stateMachine.object_detection.get_target_scores(frame)
         if targets and scores:
             ShootTargets(frame, targets, scores)
-        stateMachine.surveillance_camera()
+        else:
+            stateMachine.surveillance_camera()
     stateMachine.surveillance_base()
     time.sleep(1)
     
